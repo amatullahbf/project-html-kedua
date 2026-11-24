@@ -1,0 +1,479 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lab Maya Rangkaian Listrik</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: meja lab. Panggung SVG besar di kiri, status, misi, dan catatan di kanan. Satu kolom di layar sempit. */
+:root{
+  --bg:#f2f6f4; --panel:#ffffff; --stage:#e4ede9; --fg:#14302a; --muted:#4f6862; --line:#c6d4ce;
+  --accent:#0a7565; --accent-ink:#ffffff;
+  --wire:#b3622f; --flow:#ffd23f; --glow:#ffbf1f;
+  --lamp-glass:#f9fcfb; --fil-on:#fffbe6; --fil-off:#8b9593; --metal:#9aa7ad;
+  --batt:#1d5d8a; --batt-top:#e6bf5c; --switch-base:#5a6a72; --lever:#c8432b;
+  --ok:#13794a; --bad:#b83232;
+  --head:Fredoka,"Trebuchet MS",system-ui,sans-serif; --body:Nunito,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1a18; --panel:#16251f; --stage:#0b1412; --fg:#e4f0ec; --muted:#9bb2ab; --line:#2b413b;
+    --accent:#3fd0b4; --accent-ink:#04201a;
+    --wire:#d78752; --flow:#ffe066; --glow:#ffbf1f;
+    --lamp-glass:#1d2c29; --fil-on:#fffbe6; --fil-off:#6f7d7a; --metal:#a3b3ba;
+    --batt:#2b7ab0; --batt-top:#e6bf5c; --switch-base:#7d8d95; --lever:#ff7a5c;
+    --ok:#4cd08a; --bad:#ff8585; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1a18; --panel:#16251f; --stage:#0b1412; --fg:#e4f0ec; --muted:#9bb2ab; --line:#2b413b;
+  --accent:#3fd0b4; --accent-ink:#04201a;
+  --wire:#d78752; --flow:#ffe066; --glow:#ffbf1f;
+  --lamp-glass:#1d2c29; --fil-on:#fffbe6; --fil-off:#6f7d7a; --metal:#a3b3ba;
+  --batt:#2b7ab0; --batt-top:#e6bf5c; --switch-base:#7d8d95; --lever:#ff7a5c;
+  --ok:#4cd08a; --bad:#ff8585; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);
+  padding-block:22px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1100px;margin:0 auto}
+.head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.eyebrow{margin:0 0 2px;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{margin:0;font:600 clamp(1.7rem,4.5vw,2.5rem)/1.1 var(--head);text-wrap:balance}
+h2,h3{font-family:var(--head);font-weight:500;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.15rem} h3{font-size:1.02rem}
+p{margin:0 0 8px} p:last-child{margin-bottom:0}
+
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 16px}
+.tab{min-height:44px;padding:8px 16px;border:1.5px solid var(--line);border-radius:999px;background:var(--panel);color:var(--fg);font:700 .95rem var(--body);cursor:pointer}
+.tab[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.lab{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.lab{grid-template-columns:minmax(0,1fr)}}
+.main,.side{min-width:0;display:flex;flex-direction:column;gap:12px}
+.stage{background:var(--stage);border:1px solid var(--line);border-radius:14px;padding:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.note{font-size:.88rem;color:var(--muted);margin:0}
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
+.grp{display:flex;flex-direction:column;gap:4px}
+.gl{font-size:.74rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.sb{min-height:42px;min-width:48px;padding:6px 14px;border:0;background:transparent;color:var(--fg);font:700 .95rem var(--body);cursor:pointer}
+.sb+.sb{border-left:1.5px solid var(--line)}
+.sb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.btn{min-height:42px;padding:6px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);font:700 .95rem var(--body);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+ol{margin:0;padding-left:1.2rem} li{margin-bottom:4px}
+.status p{font-size:1.02rem}
+.volt{font-size:.88rem;color:var(--muted)}
+
+svg{display:block;width:100%;height:auto;max-width:100%}
+svg .wire{fill:none;stroke:var(--wire);stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
+svg.sym .wire{stroke:var(--fg);stroke-width:3}
+svg .flow{fill:none;stroke:var(--flow);stroke-width:5;stroke-linecap:round;stroke-dasharray:.1 20;animation:flow 1s linear infinite}
+svg.sym .flow{stroke:var(--accent);stroke-width:6}
+@keyframes flow{to{stroke-dashoffset:-20.1}}
+@media (prefers-reduced-motion:reduce){svg .flow{animation:none}}
+.cov{fill:var(--stage)}
+.terminal{fill:var(--metal);stroke:var(--fg);stroke-width:1.5}
+.lever{stroke:var(--lever);stroke-width:7;stroke-linecap:round}
+svg.sym .lever{stroke:var(--fg);stroke-width:3}
+.knob{fill:var(--lever)}
+.swbase{fill:var(--switch-base)}
+.cell{fill:var(--batt)} .celltop{fill:var(--batt-top)}
+.nub{fill:var(--metal);stroke:var(--fg);stroke-width:1.5}
+.celltxt{fill:#fff;font:800 12px var(--body);text-anchor:middle}
+.pm{font:800 18px var(--body);text-anchor:middle;fill:#fff}
+.pm.dark{fill:#3a2a00}
+.pm2{font:800 15px var(--body);text-anchor:middle;fill:var(--fg)}
+.glass{fill:var(--lamp-glass);stroke:var(--fg);stroke-width:2.5}
+.base{fill:var(--metal);stroke:var(--fg);stroke-width:1.5}
+.fil{fill:none;stroke:var(--fil-off);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.fil.on{stroke:var(--fil-on)}
+.symline{fill:none;stroke:var(--fg);stroke-width:3;stroke-linecap:round}
+.symfill{fill:var(--stage);stroke:var(--fg);stroke-width:3}
+.tag{font:700 14px var(--body);fill:var(--muted);paint-order:stroke;stroke:var(--stage);stroke-width:5px;stroke-linejoin:round}
+.hit{cursor:pointer}
+.hit:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+.lamps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.lamps li{display:grid;grid-template-columns:5.5rem minmax(0,1fr) 7.5rem;gap:10px;align-items:center;margin:0}
+.meter{display:block;height:10px;border-radius:99px;background:var(--stage);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--glow)}
+.lamps strong{font-size:.9rem}
+
+.mats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;width:100%}
+.mat{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);font:700 .9rem var(--body);cursor:pointer;text-align:left}
+.mat[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.sw{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(0,0,0,.4)}
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.tbl th{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pill{display:inline-block;padding:1px 10px;border-radius:99px;font-weight:800;font-size:.82rem;color:var(--panel)}
+.pill.on{background:var(--ok)} .pill.off{background:var(--muted)}
+
+.quiz{max-width:760px;display:flex;flex-direction:column;gap:12px}
+.opt{display:block;width:100%;text-align:left;min-height:44px;padding:8px 12px;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);font:600 .98rem var(--body);cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--ok);box-shadow:inset 0 0 0 1.5px var(--ok)}
+.opt.wrong{border-color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--bad)}
+.fb{margin-top:10px;font-size:.95rem}
+.foot{margin-top:24px;font-size:.88rem;color:var(--muted);max-width:70ch}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <p class="eyebrow">IPAS &middot; Kelas 5 SD</p>
+      <h1>Lab Maya Rangkaian Listrik</h1>
+    </div>
+    <div id="viewseg"></div>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Pilih percobaan"></nav>
+  <main id="panel"></main>
+  <p class="foot">Keselamatan: percobaan nyata di kelas hanya memakai baterai kecil. Jangan memasukkan benda ke stopkontak dan jangan menyentuh kabel listrik rumah.</p>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const state={mode:'pic',tab:'t1',
+  t1:{closed:true,batt:1},
+  t2:{type:'seri',n:2,batt:1,closed:true,out:[false,false,false]},
+  t3:{sel:null,log:[]},
+  ans:{}};
+
+const bright=v=>Math.min(1,v*0.5);
+const alphaOf=b=>0.2+0.8*b;
+const blabel=b=>b<=0?'Padam':b>=0.9?'Sangat terang':b>=0.45?'Terang':b>=0.2?'Redup':'Sangat redup';
+const volt=n=>String(1.5*n).replace('.',',');
+
+const MATS=[
+ {id:'klip',n:'Klip kertas',c:true,col:'#9aa5ab',why:'Klip kertas terbuat dari logam. Logam menghantarkan arus listrik.'},
+ {id:'karet',n:'Penghapus karet',c:false,col:'#e77c8b',why:'Karet menahan arus listrik.'},
+ {id:'koin',n:'Koin logam',c:true,col:'#c9a14a',why:'Koin terbuat dari logam, jadi arus bisa lewat.'},
+ {id:'plastik',n:'Sendok plastik',c:false,col:'#6fb7e9',why:'Plastik menahan arus listrik.'},
+ {id:'paku',n:'Paku besi',c:true,col:'#6d777d',why:'Besi adalah logam yang menghantarkan listrik dengan baik.'},
+ {id:'kayu',n:'Penggaris kayu',c:false,col:'#c89a62',why:'Kayu yang kering menahan arus listrik.'},
+ {id:'foil',n:'Kertas aluminium',c:true,col:'#d7dde0',why:'Aluminium adalah logam, walau tipis ia tetap menghantarkan listrik.'},
+ {id:'kertas',n:'Kertas HVS',c:false,col:'#f1efe6',why:'Kertas yang kering menahan arus listrik.'},
+ {id:'grafit',n:'Isi pensil (grafit)',c:true,col:'#3a3f44',why:'Grafit bukan logam, tetapi tetap bisa menghantarkan listrik.'},
+ {id:'kain',n:'Kain katun',c:false,col:'#a9c4a0',why:'Kain yang kering menahan arus listrik.'},
+ {id:'kunci',n:'Kunci logam',c:true,col:'#b9b27a',why:'Kunci terbuat dari logam, jadi arus bisa lewat.'},
+ {id:'kaca',n:'Gelas kaca',c:false,col:'#bfe3ea',why:'Kaca menahan arus listrik.'}
+];
+
+const QZ=[
+ {q:'Lampu pada rangkaian sederhana menyala ketika ...',o:['saklar terbuka','jalur listrik tertutup dan lengkap','baterai dicabut','kabel diputus'],a:1,w:'Arus hanya mengalir jika jalurnya tertutup dari kutub (+) ke kutub (−) baterai.'},
+ {q:'Pada rangkaian seri, satu lampu dilepas. Apa yang terjadi pada lampu yang lain?',o:['Tetap menyala','Menjadi lebih terang','Ikut padam','Berubah warna'],a:2,w:'Rangkaian seri hanya punya satu jalur. Saat satu lampu dilepas, jalurnya terputus.'},
+ {q:'Mengapa lampu di rumah dipasang secara paralel?',o:['Supaya jika satu lampu mati, lampu lain tetap menyala','Supaya listrik lebih boros','Supaya semua lampu makin redup','Supaya tidak perlu saklar'],a:0,w:'Pada rangkaian paralel, tiap lampu punya jalur sendiri ke sumber listrik.'},
+ {q:'Dua lampu dipasang seri pada satu baterai. Dibandingkan satu lampu, nyalanya ...',o:['lebih redup','lebih terang','sama saja','padam'],a:0,w:'Tegangan baterai dibagi ke dua lampu, jadi tiap lampu menyala lebih redup.'},
+ {q:'Manakah yang termasuk isolator?',o:['Paku besi','Koin logam','Penghapus karet','Kertas aluminium'],a:2,w:'Karet menahan arus listrik, jadi karet adalah isolator.'}
+];
+
+/* ---------- komponen SVG ---------- */
+const tag=(x,y,t,a)=>`<text class="tag" x="${x}" y="${y}" text-anchor="${a||'middle'}">${t}</text>`;
+const flow=d=>`<path class="flow" d="${d}"/>`;
+const defs=id=>`<defs><radialGradient id="${id}"><stop offset="0" style="stop-color:var(--glow);stop-opacity:.9"/><stop offset=".55" style="stop-color:var(--glow);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--glow);stop-opacity:0"/></radialGradient></defs>`;
+const svg=(label,body,id)=>`<svg viewBox="0 0 640 360" class="${state.mode}" role="group" aria-label="${label}">${defs(id)}${body}</svg>`;
+
+function battery(x,y,rot,n,m){
+  let s='';
+  const cr=(tx,ty)=>`transform="rotate(${-rot} ${tx} ${ty})"`;
+  if(m==='pic'){
+    const w=60*n;
+    s+=`<rect class="cov" x="${-w/2}" y="-26" width="${w}" height="52"/>`;
+    s+=`<rect class="nub" x="${w/2-2}" y="-9" width="14" height="18" rx="3"/>`;
+    for(let i=0;i<n;i++){
+      const x0=-w/2+60*i;
+      s+=`<rect class="cell" x="${x0}" y="-22" width="60" height="44" rx="7"/>`;
+      s+=`<rect class="celltop" x="${x0+44}" y="-22" width="16" height="44" rx="5"/>`;
+      s+=`<text class="celltxt" x="${x0+22}" y="5" ${cr(x0+22,5)}>1,5 V</text>`;
+    }
+    s+=`<text class="pm dark" x="${w/2-8}" y="6" ${cr(w/2-8,6)}>+</text>`;
+    s+=`<text class="pm" x="${-w/2+10}" y="6" ${cr(-w/2+10,6)}>&minus;</text>`;
+  }else{
+    const c0=-(n-1)*11, cE=c0+22*(n-1);
+    s+=`<rect class="cov" x="${c0-5}" y="-20" width="${(n-1)*22+10}" height="40"/>`;
+    for(let i=0;i<n;i++){
+      const c=c0+22*i;
+      s+=`<line class="symline" x1="${c-5}" y1="-9" x2="${c-5}" y2="9" style="stroke-width:5"/>`;
+      s+=`<line class="symline" x1="${c+5}" y1="-17" x2="${c+5}" y2="17"/>`;
+      if(i<n-1) s+=`<line class="symline" x1="${c+5}" y1="0" x2="${c+17}" y2="0"/>`;
+    }
+    s+=`<text class="pm2" x="${cE+17}" y="-12" ${cr(cE+17,-12)}>+</text>`;
+    s+=`<text class="pm2" x="${c0-17}" y="-12" ${cr(c0-17,-12)}>&minus;</text>`;
+  }
+  return `<g transform="translate(${x} ${y}) rotate(${rot})">${s}</g>`;
+}
+
+function sw(x,y,rot,closed,m,h){
+  const r=m==='pic'?7:5;
+  let s=`<rect class="cov" x="-44" y="-12" width="88" height="24"/>`;
+  if(m==='pic') s+=`<rect class="swbase" x="-56" y="9" width="112" height="16" rx="5"/>`;
+  s+=`<circle class="terminal" cx="-42" cy="0" r="${r}"/><circle class="terminal" cx="42" cy="0" r="${r}"/>`;
+  const ex=closed?42:33, ey=closed?0:-38;
+  s+=`<line class="lever" x1="-42" y1="0" x2="${ex}" y2="${ey}"/>`;
+  if(m==='pic') s+=`<circle class="knob" cx="${ex}" cy="${ey}" r="6"/>`;
+  s+=`<rect x="-62" y="-52" width="124" height="86" fill="transparent"/>`;
+  return `<g class="hit" data-act="${h.act}" data-k="${h.act}-hit" role="button" tabindex="0" aria-label="${h.label}" transform="translate(${x} ${y}) rotate(${rot})">${s}</g>`;
+}
+
+function lamp(x,y,rot,o){
+  const {on,out,alpha,mode,gid}=o;
+  let s='';
+  if(o.idx!==undefined) s+=`<rect x="-36" y="-84" width="72" height="124" fill="transparent"/>`;
+  if(out) s+=`<rect class="cov" x="-26" y="-9" width="52" height="18"/><circle class="terminal" cx="-24" cy="0" r="5"/><circle class="terminal" cx="24" cy="0" r="5"/>`;
+  s+=`<g transform="translate(0 ${out?-50:0})">`;
+  if(on) s+=`<circle r="64" fill="url(#${gid})" opacity="${alpha}"/>`;
+  if(mode==='pic'){
+    s+=`<rect class="base" x="-13" y="22" width="26" height="15" rx="3"/><circle class="glass" r="28"/>`;
+    if(on) s+=`<circle r="26.5" style="fill:var(--glow)" opacity="${alpha}"/>`;
+    s+=`<path class="fil${on?' on':''}" d="M-10,13 V0 L-5,-9 L0,0 L5,-9 L10,0 V13"/>`;
+  }else{
+    s+=`<circle class="symfill" r="22"/>`;
+    if(on) s+=`<circle r="20.5" style="fill:var(--glow)" opacity="${alpha}"/>`;
+    s+=`<path class="symline" d="M-15.5,-15.5 L15.5,15.5 M15.5,-15.5 L-15.5,15.5"/>`;
+  }
+  s+='</g>';
+  const attrs=o.idx!==undefined?`class="hit" data-act="t2lamp" data-val="${o.idx}" data-k="t2lamp-hit-${o.idx}" role="button" tabindex="0" aria-label="${o.hl}"`:'';
+  return `<g ${attrs} transform="translate(${x} ${y}) rotate(${rot})">${s}</g>`;
+}
+
+/* ---------- adegan ---------- */
+function scene1(){
+  const {closed,batt}=state.t1, m=state.mode;
+  const b=closed?bright(batt):0, a=alphaOf(b);
+  let s=`<path class="wire" d="M110,80 H530 V280 H110 Z"/>`;
+  if(closed) s+=flow('M320,280 H530 V80 H110 V280 H320');
+  s+=sw(320,80,0,closed,m,{act:'t1sw',label:closed?'Saklar tertutup. Tekan untuk membuka':'Saklar terbuka. Tekan untuk menutup'});
+  s+=lamp(530,180,90,{on:closed,out:false,alpha:a,mode:m,gid:'g1'});
+  s+=battery(320,280,0,batt,m);
+  s+=tag(320,26,'Saklar')+tag(572,185,'Lampu','start')+tag(320,336,'Baterai');
+  return svg('Rangkaian sederhana: baterai, saklar, dan lampu',s,'g1');
+}
+
+function t2calc(){
+  const t=state.t2,n=t.n,series=t.type==='seri';
+  const outs=t.out.slice(0,n), anyOut=outs.some(Boolean);
+  const b=bright(t.batt/(series?n:1));
+  const on=i=>t.closed&&(series?!anyOut:!outs[i]);
+  return {t,n,series,outs,anyOut,b,on};
+}
+
+function scene2(){
+  const c=t2calc(), {t,n,series,outs,anyOut,b,on}=c, m=state.mode, a=alphaOf(b);
+  const hl=i=>`${outs[i]?'Pasang':'Lepas'} Lampu ${i+1}`;
+  const swl=t.closed?'Saklar tertutup. Tekan untuk membuka':'Saklar terbuka. Tekan untuk menutup';
+  let s='';
+  if(series){
+    const xs=n===2?[230,410]:[190,320,450];
+    s+=`<path class="wire" d="M100,90 H540 V280 H100 Z"/>`;
+    if(t.closed&&!anyOut) s+=flow('M400,280 H540 V90 H100 V280 H400');
+    s+=sw(200,280,0,t.closed,m,{act:'t2sw',label:swl});
+    s+=battery(400,280,0,t.batt,m);
+    xs.forEach((x,i)=>{
+      s+=lamp(x,90,0,{on:on(i),out:outs[i],alpha:a,mode:m,gid:'g2',idx:i,hl:hl(i)});
+      s+=tag(x,152,'Lampu '+(i+1));
+    });
+    s+=tag(200,336,'Saklar')+tag(400,336,'Baterai');
+  }else{
+    const xs=n===2?[290,470]:[250,370,490], last=xs[n-1];
+    let d=`M100,300 V50 H${last} M100,300 H${last}`;
+    xs.forEach(x=>{d+=` M${x},50 V300`;});
+    s+=`<path class="wire" d="${d}"/>`;
+    const lit=xs.map((_,i)=>on(i)), any=lit.some(Boolean), from=i=>lit.slice(i).some(Boolean);
+    if(any){ s+=flow(`M100,225 V50 H${xs[0]}`)+flow(`M${xs[0]},300 H100 V225`); }
+    xs.forEach((x,i)=>{
+      if(lit[i]) s+=flow(`M${x},50 V300`);
+      if(i>0&&from(i)) s+=flow(`M${xs[i-1]},50 H${x}`)+flow(`M${x},300 H${xs[i-1]}`);
+    });
+    s+=sw(100,100,-90,t.closed,m,{act:'t2sw',label:swl});
+    s+=battery(100,225,-90,t.batt,m);
+    xs.forEach((x,i)=>{
+      s+=lamp(x,175,90,{on:lit[i],out:outs[i],alpha:a,mode:m,gid:'g2',idx:i,hl:hl(i)});
+      s+=tag(x,246,'Lampu '+(i+1));
+    });
+    s+=tag(66,229,'Baterai','end')+tag(66,104,'Saklar','end');
+  }
+  return svg(series?'Rangkaian seri':'Rangkaian paralel',s,'g2');
+}
+
+function scene3(){
+  const m=state.mode, sel=MATS.find(x=>x.id===state.t3.sel), on=!!(sel&&sel.c);
+  let s=`<path class="wire" d="M100,90 H540 V280 H100 Z"/>`;
+  if(on) s+=flow('M320,280 H540 V90 H100 V280 H320');
+  s+=`<rect class="cov" x="252" y="74" width="136" height="32"/>`;
+  if(sel) s+=`<rect x="262" y="74" width="116" height="32" rx="9" fill="${sel.col}" stroke="rgba(0,0,0,.45)" stroke-width="2"/><rect x="270" y="79" width="100" height="6" rx="3" fill="#fff" opacity=".35"/>`;
+  else s+=`<rect x="262" y="76" width="116" height="28" rx="9" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 5"/>`;
+  s+=`<circle class="terminal" cx="252" cy="90" r="9"/><circle class="terminal" cx="388" cy="90" r="9"/>`;
+  if(on) s+=flow('M388,90 H252');
+  s+=lamp(540,185,90,{on,out:false,alpha:alphaOf(bright(1)),mode:m,gid:'g3'});
+  s+=battery(320,280,0,1,m);
+  s+=tag(320,48,sel?'Bahan uji: '+sel.n:'Celah uji: belum ada bahan');
+  s+=tag(582,189,'Lampu','start')+tag(320,336,'Baterai');
+  return svg('Rangkaian uji bahan dengan celah di bagian atas',s,'g3');
+}
+
+/* ---------- kontrol ---------- */
+function seg(label,act,opts,cur){
+  return `<div class="grp"><span class="gl">${label}</span><div class="seg" role="group" aria-label="${label}">${
+    opts.map(([v,t])=>`<button class="sb" data-act="${act}" data-val="${v}" data-k="${act}-${v}" aria-pressed="${String(cur)===String(v)}">${t}</button>`).join('')
+  }</div></div>`;
+}
+const legend='<p class="note">Titik yang bergerak menunjukkan arus listrik sedang mengalir. Klik saklar atau lampu langsung di gambar juga bisa.</p>';
+
+/* ---------- panel ---------- */
+function panel1(){
+  const {closed,batt}=state.t1, b=closed?bright(batt):0;
+  const st=closed
+    ?`Saklar tertutup. Jalur lengkap, jadi arus mengalir dari kutub (+) baterai, lewat lampu, lalu kembali ke kutub (&minus;). Lampu menyala ${blabel(b).toLowerCase()}.`
+    :'Saklar terbuka. Jalur terputus, jadi arus berhenti dan lampu padam.';
+  return `<div class="lab"><div class="main">
+    <div class="stage">${scene1()}</div>${legend}
+    <div class="controls">
+      ${seg('Saklar','t1sw',[[0,'Terbuka'],[1,'Tertutup']],closed?1:0)}
+      ${seg('Jumlah baterai','t1b',[[1,'1'],[2,'2']],batt)}
+    </div></div>
+    <div class="side">
+      <div class="card status"><h2>Pengamatan</h2><p role="status" aria-live="polite">${st}</p><p class="volt">Tegangan baterai: ${volt(batt)} V</p></div>
+      <div class="card"><h2>Misi</h2><ol>
+        <li>Tutup saklar dan nyalakan lampu.</li>
+        <li>Tambah baterai. Apa yang berubah pada nyala lampu?</li>
+        <li>Buka saklar. Ke mana arus listrik pergi?</li></ol></div>
+      <div class="card"><h2>Konsep</h2><p>Rangkaian listrik sederhana punya sumber listrik (baterai), penghantar (kabel), dan beban (lampu). Lampu hanya menyala jika jalurnya tertutup. Saklar bertugas membuka dan menutup jalur itu.</p></div>
+      ${state.mode==='sym'?'<div class="card"><h2>Membaca simbol</h2><p>Baterai: garis panjang (+) dan garis pendek tebal (&minus;). Lampu: lingkaran dengan tanda silang. Saklar: garis miring dengan dua titik. Kabel: garis lurus.</p></div>':''}
+    </div></div>`;
+}
+
+function panel2(){
+  const c=t2calc(), {t,n,series,outs,anyOut,b,on}=c;
+  let st;
+  const lost=outs.map((o,i)=>o?i+1:0).filter(Boolean).join(', ');
+  if(!t.closed) st='Saklar terbuka. Jalur terputus, jadi semua lampu padam.';
+  else if(series){
+    st=anyOut?`Lampu ${lost} dilepas. Rangkaian seri hanya punya satu jalur, jadi jalurnya terputus dan semua lampu padam.`
+      :`Semua lampu menyala ${blabel(b).toLowerCase()}. Tegangan ${volt(t.batt)} V dibagi ke ${n} lampu, jadi nyala tiap lampu lebih redup daripada rangkaian dengan satu lampu pada baterai yang sama.`;
+  }else{
+    const cnt=outs.filter(Boolean).length;
+    st=cnt===0?'Setiap lampu terhubung langsung ke baterai lewat jalurnya sendiri, jadi nyalanya sama seperti rangkaian satu lampu.'
+      :cnt===n?'Semua lampu dilepas, jadi tidak ada jalur yang lengkap.'
+      :`Lampu ${lost} dilepas dan padam. Lampu lain tetap menyala karena jalurnya masih lengkap.`;
+  }
+  const chips=Array.from({length:n},(_,i)=>{
+    const o=outs[i], lit=on(i), bb=lit?b:0;
+    return `<li><span>Lampu ${i+1}</span><span class="meter" aria-hidden="true"><i style="width:${Math.round(bb*100)}%"></i></span><strong>${o?'Dilepas':lit?blabel(bb):'Padam'}</strong></li>`;
+  }).join('');
+  const lampBtns=Array.from({length:n},(_,i)=>`<button class="btn" data-act="t2lamp" data-val="${i}" data-k="t2lampb-${i}">${outs[i]?'Pasang':'Lepas'} Lampu ${i+1}</button>`).join('');
+  const concept=series
+    ?'Rangkaian seri: komponen dipasang berurutan pada satu jalur. Jika satu lampu dilepas, jalur terputus dan semua lampu padam. Makin banyak lampu, makin redup nyalanya karena tegangan baterai dibagi.'
+    :'Rangkaian paralel: tiap lampu punya jalur sendiri ke baterai. Jika satu lampu dilepas, lampu lain tetap menyala. Itu sebabnya lampu di rumah dipasang paralel.';
+  return `<div class="lab"><div class="main">
+    <div class="stage">${scene2()}</div>${legend}
+    <div class="controls">
+      ${seg('Susunan','t2type',[['seri','Seri'],['paralel','Paralel']],t.type)}
+      ${seg('Jumlah lampu','t2n',[[2,'2'],[3,'3']],t.n)}
+      ${seg('Jumlah baterai','t2b',[[1,'1'],[2,'2']],t.batt)}
+      ${seg('Saklar','t2sw',[[0,'Terbuka'],[1,'Tertutup']],t.closed?1:0)}
+    </div>
+    <div class="grp"><span class="gl">Lepas atau pasang lampu</span><div class="btns">${lampBtns}</div></div>
+    </div>
+    <div class="side">
+      <div class="card status"><h2>Pengamatan</h2><p role="status" aria-live="polite">${st}</p></div>
+      <div class="card"><h2>Kecerahan lampu</h2><ul class="lamps" style="list-style:none;margin:0;padding:0">${chips}</ul></div>
+      <div class="card"><h2>Misi</h2><ol>
+        <li>Pasang 2 lampu seri, lalu lepas Lampu 1. Apa yang terjadi pada Lampu 2?</li>
+        <li>Ganti ke paralel dan lepas Lampu 1 lagi. Bandingkan hasilnya.</li>
+        <li>Pada rangkaian seri, tambah jumlah lampu. Bagaimana nyalanya?</li>
+        <li>Tambah baterai. Apa pengaruhnya?</li></ol></div>
+      <div class="card"><h2>Konsep</h2><p>${concept}</p></div>
+    </div></div>`;
+}
+
+function panel3(){
+  const sel=MATS.find(x=>x.id===state.t3.sel);
+  const st=sel?`<strong>${sel.n}</strong>: lampu ${sel.c?'menyala':'padam'}. ${sel.why}`:'Pilih satu bahan, lalu lihat apakah lampu menyala. Coba tebak dulu sebelum memilih.';
+  const rows=state.t3.log.map(r=>{const x=MATS.find(m=>m.id===r.id);return `<tr><td>${x.n}</td><td><span class="pill ${x.c?'on':'off'}">${x.c?'Menyala':'Padam'}</span></td><td>${x.c?'Konduktor':'Isolator'}</td></tr>`;}).join('');
+  const nc=state.t3.log.filter(r=>MATS.find(m=>m.id===r.id).c).length, ni=state.t3.log.length-nc;
+  const table=state.t3.log.length
+    ?`<div class="tblwrap"><table class="tbl"><thead><tr><th>Bahan</th><th>Lampu</th><th>Jenis</th></tr></thead><tbody>${rows}</tbody></table></div><p class="note" style="margin-top:8px">${nc} konduktor, ${ni} isolator dari ${state.t3.log.length} bahan.</p>`
+    :'<p class="note">Belum ada bahan yang diuji. Hasil tiap bahan akan tercatat di sini.</p>';
+  const mats=MATS.map(x=>`<button class="mat" data-act="t3mat" data-val="${x.id}" data-k="t3mat-${x.id}" aria-pressed="${state.t3.sel===x.id}"><span class="sw" style="background:${x.col}"></span>${x.n}</button>`).join('');
+  return `<div class="lab"><div class="main">
+    <div class="stage">${scene3()}</div>${legend}
+    <div class="mats">${mats}</div>
+    <div class="btns"><button class="btn" data-act="t3clear" data-k="t3clear">Lepas bahan</button><button class="btn" data-act="t3reset" data-k="t3reset">Hapus catatan</button></div>
+    </div>
+    <div class="side">
+      <div class="card status"><h2>Pengamatan</h2><p role="status" aria-live="polite">${st}</p></div>
+      <div class="card"><h2>Tabel pengamatan</h2>${table}</div>
+      <div class="card"><h2>Misi</h2><ol>
+        <li>Uji semua bahan satu per satu.</li>
+        <li>Kelompokkan bahan yang membuat lampu menyala dan yang tidak.</li>
+        <li>Apa kesamaan bahan-bahan yang membuat lampu menyala?</li></ol></div>
+      <div class="card"><h2>Konsep</h2><p>Konduktor adalah bahan yang menghantarkan arus listrik, misalnya logam. Isolator adalah bahan yang tidak menghantarkan arus listrik, misalnya karet, plastik, dan kayu kering.</p></div>
+    </div></div>`;
+}
+
+function panel4(){
+  const done=Object.keys(state.ans).length, score=QZ.filter((z,i)=>state.ans[i]===z.a).length;
+  const msg=score===QZ.length?'Luar biasa! Kamu menguasai rangkaian listrik.':score>=3?'Bagus! Ulangi percobaan di lab untuk bagian yang masih keliru.':'Ayo kembali ke lab, lalu coba kuis lagi.';
+  const cards=QZ.map((z,i)=>{
+    const ans=state.ans[i], got=ans!==undefined;
+    const opts=z.o.map((t,j)=>{
+      let cls='opt', pre='';
+      if(got&&j===z.a){cls+=' right';pre='&#10003; ';}
+      else if(got&&j===ans){cls+=' wrong';pre='&#10007; ';}
+      return `<button class="${cls}" data-act="q" data-val="${i}:${j}" data-k="q-${i}-${j}" ${got?'aria-disabled="true"':''}>${pre}${t}</button>`;
+    }).join('');
+    const fb=got?`<p class="fb" role="status">${ans===z.a?'Benar. ':'Belum tepat. '}${z.w}</p>`:'';
+    return `<section class="card"><h3>${i+1}. ${z.q}</h3>${opts}${fb}</section>`;
+  }).join('');
+  return `<div class="quiz"><div class="card"><h2>Uji Pemahaman</h2><p>Jawab lima pertanyaan berdasarkan percobaanmu di lab.</p>
+    <p role="status" aria-live="polite"><strong>Terjawab ${done} dari ${QZ.length}. Skor ${score}.</strong></p>
+    ${done===QZ.length?`<p>${msg}</p><button class="btn" data-act="qreset" data-k="qreset">Ulangi kuis</button>`:''}</div>${cards}</div>`;
+}
+
+/* ---------- render dan aksi ---------- */
+const TABS=[['t1','Rangkaian Sederhana'],['t2','Seri dan Paralel'],['t3','Konduktor dan Isolator'],['t4','Uji Pemahaman']];
+function render(){
+  const ae=document.activeElement, k=ae&&ae.dataset?ae.dataset.k:null;
+  $('#viewseg').innerHTML=seg('Tampilan','mode',[['pic','Gambar'],['sym','Simbol']],state.mode);
+  $('#tabs').innerHTML=TABS.map(([id,t])=>`<button class="tab" data-act="tab" data-val="${id}" data-k="tab-${id}" ${state.tab===id?'aria-current="page"':''}>${t}</button>`).join('');
+  $('#panel').innerHTML={t1:panel1,t2:panel2,t3:panel3,t4:panel4}[state.tab]();
+  if(k){const n=document.querySelector('[data-k="'+k+'"]'); if(n) n.focus({preventScroll:true});}
+}
+function act(a,v){
+  const s=state;
+  if(a==='mode') s.mode=v;
+  else if(a==='tab') s.tab=v;
+  else if(a==='t1sw') s.t1.closed=v===undefined?!s.t1.closed:v==='1';
+  else if(a==='t1b') s.t1.batt=+v;
+  else if(a==='t2type') s.t2.type=v;
+  else if(a==='t2n') s.t2.n=+v;
+  else if(a==='t2b') s.t2.batt=+v;
+  else if(a==='t2sw') s.t2.closed=v===undefined?!s.t2.closed:v==='1';
+  else if(a==='t2lamp'){const i=+v; s.t2.out[i]=!s.t2.out[i];}
+  else if(a==='t3mat'){s.t3.sel=v; if(!s.t3.log.find(r=>r.id===v)) s.t3.log.push({id:v});}
+  else if(a==='t3clear') s.t3.sel=null;
+  else if(a==='t3reset'){s.t3.sel=null; s.t3.log=[];}
+  else if(a==='q'){const [qi,oi]=v.split(':').map(Number); if(s.ans[qi]===undefined) s.ans[qi]=oi;}
+  else if(a==='qreset') s.ans={};
+  render();
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  act(el.dataset.act,el.dataset.val);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ') return;
+  const el=e.target.closest('[role="button"][data-act]');
+  if(!el||el.tagName==='BUTTON') return;
+  e.preventDefault(); act(el.dataset.act,el.dataset.val);
+});
+render();
+</script>
+
+</body></html>
